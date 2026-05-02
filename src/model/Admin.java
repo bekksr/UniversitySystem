@@ -1,35 +1,37 @@
 package model;
-
-import java.util.Date;
-
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 public class Admin extends Employee {
-    public String role;
-
-    public Admin(int id, String name, String email, String password,
-                 double salary, Date hireDate, String department, String role) {
-        super(id, name, email, password, salary, hireDate, department);
-        this.role = role;
+    private final List<String> systemLogs = new ArrayList<>();
+ 
+    public Admin(String firstName, String lastName, String email, String password, double salary) {
+        super(firstName, lastName, email, password, salary, "Administration");
     }
-
-    public boolean addUser(User u) {
-        if (u == null) return false;
-        System.out.println("User added: " + u.name);
-        return true;
+ 
+    @Override public void work() {
+        System.out.println(getFullName() + " [Admin] is managing system operations.");
     }
-
-    public boolean removeUser(User u) {
-        if (u == null) return false;
-        System.out.println("User removed: " + u.name);
-        return true;
+ 
+    public List<String> viewLogs() {
+        System.out.println("=== System Logs ===");
+        systemLogs.forEach(l -> System.out.println("  " + l));
+        return new ArrayList<>(systemLogs);
     }
-
-    public boolean updateUser(User u) {
-        if (u == null) return false;
-        System.out.println("User updated: " + u.name);
-        return true;
+ 
+    public void log(String event) {
+        systemLogs.add("[" + LocalDateTime.now() + "] " + event);
     }
-
-    public void viewLogs() {
-        System.out.println("Viewing system logs...");
+ 
+    public void deleteUser(User u) {
+        log("DELETED: " + u.getFullName() + " id=" + u.getId());
     }
+ 
+    public void resetPassword(User u, String newPw) {
+        u.setPassword(newPw);
+        log("PASSWORD RESET: " + u.getFullName());
+    }
+ 
+    public List<String> getSystemLogs() { return new ArrayList<>(systemLogs); }
+    
 }

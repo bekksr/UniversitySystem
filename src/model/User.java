@@ -1,40 +1,62 @@
 package model;
 
-public class User {
-    public int id;
-    public String name;
-    public String email;
-    public String password;
+import java.util.Objects;
+import java.util.UUID;
 
+public abstract class User {
+     private final String id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String passwordHash;
     private boolean authenticated;
 
-    public User(int id, String name, String email, String password) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.password = password;
+ 
+    protected User(String firstName, String lastName, String email, String password) {
+        this.id           = UUID.randomUUID().toString();
+        this.firstName    = firstName;
+        this.lastName     = lastName;
+        this.email        = email;
+        this.passwordHash = hash(password);
         this.authenticated = false;
     }
-
+ 
+    // auth
+ 
     public boolean login(String email, String password) {
-        if (this.email.equals(email) && this.password.equals(password)) {
-            this.authenticated = true;
+        if (this.email.equals(email) && this.passwordHash.equals(hash(password))) {
+            authenticated = true;
+            System.out.println(getFullName() + " logged in.");
             return true;
         }
+        System.out.println("Login failed for: " + email);
         return false;
     }
-
-    public boolean logout() {
-        this.authenticated = false;
-        return true;
+ 
+    public void logout() {
+        authenticated = false;
+        System.out.println(getFullName() + " logged out.");
     }
-
-    public boolean isAuthenticated() {
-        return authenticated;
-    }
-
+ 
+    public boolean isAuthenticated() { return authenticated; }
+ 
+    private String hash(String pw) { return String.valueOf(Objects.hash(pw)); }
+ 
+    // getters setters
+ 
+    public String getId()        { return id; }
+    public String getFirstName() { return firstName; }
+    public String getLastName()  { return lastName; }
+    public String getEmail()     { return email; }
+    public String getFullName()  { return firstName + " " + lastName; }
+ 
+    public void setFirstName(String v) { this.firstName = v; }
+    public void setLastName(String v)  { this.lastName  = v; }
+    public void setEmail(String v)     { this.email     = v; }
+    public void setPassword(String pw) { this.passwordHash = hash(pw); }
+ 
     @Override
     public String toString() {
-        return name + " (" + email + ")";
+        return "[" + getClass().getSimpleName() + "] " + getFullName() + " <" + email + ">";
     }
 }

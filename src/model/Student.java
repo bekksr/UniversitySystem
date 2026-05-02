@@ -1,140 +1,112 @@
 package model;
-
+import enums.StudentDegree;
+import exception.LowHIndexException;
+import observer.Observer;
+ 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-public class Student extends User implements Researcher {
-    public double gpa;
-    public int year;
-    public Researcher supervisor;
-
-    private List<Course> courses;
-    private List<Mark> marks;
-    private List<ResearchPaper> papers;
-
-    public Student(int id, String name, String email, String password, int year) {
-        super(id, name, email, password);
-        this.year = year;
-        this.gpa = 0.0;
-        this.courses = new ArrayList<>();
-        this.marks = new ArrayList<>();
-        this.papers = new ArrayList<>();
+public class Student extends User implements Observer {
+    private final String studentId;
+    private final StudentDegree degree;  
+    private int                 year;    
+    private double              gpa;
+    private Researcher          supervisor;   
+ 
+    private final List<Course>  enrolledCourses = new ArrayList<>();
+    private final List<Mark>    transcript      = new ArrayList<>();
+    private final List<String>  inbox           = new ArrayList<>();
+ 
+    private StudentResearchProfile researchProfile; 
+ 
+    public Student(String firstName, String lastName, String email, String password,
+                   String studentId, int year) {
+        super(firstName, lastName, email, password);
+        this.studentId = studentId;
+        this.degree    = StudentDegree.BACHELOR;
+        this.year      = year;
     }
-
-    public List<Course> viewCourses() {
-        return new ArrayList<>(courses);
-    }
-
-    public String viewTranscript() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== Transcript for ").append(name).append(" ===\n");
-        sb.append("Year: ").append(year).append(" | GPA: ")
-          .append(String.format("%.2f", gpa)).append("\n");
-        sb.append("-----------------------------------\n");
-
-        for (Mark mark : marks) {
-            Course c = mark.getCourse();
-            String courseName = (c != null) ? c.name : "Unknown";
-            sb.append(courseName).append(": ")
-              .append(String.format("%.1f", mark.calculateGrade()))
-              .append(" (").append(mark.getLetterGrade()).append(")\n");
-        }
-
-        if (marks.isEmpty()) {
-            sb.append("No marks yet.\n");
-        }
-        sb.append("===================================\n");
-        return sb.toString();
-    }
-
-    public boolean rateTeacher(Teacher t, int rating) {
-        if (t == null || rating < 1 || rating > 5) {
-            return false;
-        }
-        System.out.println(name + " rated " + t.name + ": " + rating + "/5");
-        return true;
-    }
-
-    public boolean canRetake() {
-        for (Mark m : marks) {
-            if (m.calculateGrade() < 50) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void addCourse(Course c) {
-        if (!courses.contains(c)) {
-            courses.add(c);
-        }
-    }
-
-    public void removeCourse(Course c) {
-        courses.remove(c);
-    }
-
-    public void addMark(Mark mark) {
-        marks.add(mark);
-        recalculateGpa();
-    }
-
-    public List<Mark> getMarks() {
-        return new ArrayList<>(marks);
-    }
-
-    public int getTotalCredits() {
-        int total = 0;
-        for (Course c : courses) {
-            total += c.credits;
-        }
-        return total;
-    }
-
-    private void recalculateGpa() {
-        if (marks.isEmpty()) {
-            gpa = 0.0;
+ 
+    // supervisor
+ 
+    public void setSupervisor(Researcher supervisor) throws LowHIndexException {
+        if (year != 4) {
+            System.out.println("Only 4th-year students need a supervisor.");
             return;
         }
-        double totalPoints = 0;
-        int count = 0;
-        for (Mark m : marks) {
-            totalPoints += m.getGpaPoints();
-            count++;
-        }
-        gpa = totalPoints / count;
+        int h = supervisor.calculateHIndex();
+        if (h < 3) throw new LowHIndexException(h, 3);
+        this.supervisor = supervisor;
+        System.out.println(getFullName() + "'s supervisor set to: " + supervisor.getFullName());
     }
-
+ 
+    public Researcher getSupervisor() { return supervisor; }
+ 
+    // researcher opt in
+ 
+    public boolean isResearcher() { return researchProfile != null; }
+ 
+    // make a student a researcher
+    public StudentResearchProfile enableResearch() {
+        if (researchProfile == null) {
+            researchProfile = new StudentResearchProfile(this);
+        }
+        return researchProfile;
+    }
+ 
+    public StudentResearchProfile getResearchProfile() { return researchProfile; }
+ 
+    // course transcript
+ 
+    public List<Course> viewCourses() {
+        System.out.println("=== Courses of " + getFullName() + " ===");
+        enrolledCourses.forEach(c -> System.out.println("  " + c));
+        return new ArrayList<>(enrolledCourses);
+    }
+ 
+    public List<Mark> viewTranscript() {
+        System.out.println("=== Transcript of " + getFullName() + " (GPA=" + String.format("%.2f", gpa) + ") ===");
+        transcript.forEach(m -> System.out.println("  " + m));
+        return new ArrayList<>(transcript);
+    }
+ 
+    public void rateTeacher(Teacher teacher, int rating, String comment) {
+        if (rating < 1 || rating > 5) { System.out.println("Rating must be 1-5."); return; }
+        teacher.receiveRating(rating, comment, this);
+        System.out.println(getFullName() + " rated " + teacher.getFullName() + ": " + rating + "/5");
+    }
+ 
+    public void addCourse(Course c) { if (!enrolledCourses.contains(c)) enrolledCourses.add(c); }
+    public void removeCourse(Course c) { enrolledCourses.remove(c); }
+ 
+    public void addMark(Mark m) {
+        transcript.add(m);
+        recalcGpa();
+    }
+ 
+    private void recalcGpa() {
+        gpa = transcript.stream().mapToDouble(Mark::getScore).average().orElse(0) / 25.0;
+        gpa = Math.min(gpa, 4.0);
+    }
+ 
+    // observer
+ 
     @Override
-    public void printPapers(Comparator<ResearchPaper> c) {
-        List<ResearchPaper> sorted = new ArrayList<>(papers);
-        sorted.sort(c);
-        for (ResearchPaper p : sorted) {
-            System.out.println(p);
-        }
+    public void update(String eventType, String message) {
+        String entry = "[" + eventType + "] " + message;
+        inbox.add(entry);
+        System.out.println("📬 " + getFullName() + " received: " + entry);
     }
-
-    @Override
-    public int getHIndex() {
-        List<ResearchPaper> sorted = new ArrayList<>(papers);
-        sorted.sort((a, b) -> Integer.compare(b.getCitations(), a.getCitations()));
-        int h = 0;
-        for (int i = 0; i < sorted.size(); i++) {
-            if (sorted.get(i).getCitations() >= i + 1) {
-                h = i + 1;
-            } else {
-                break;
-            }
-        }
-        return h;
-    }
-
-    public void addPaper(ResearchPaper paper) {
-        papers.add(paper);
-    }
-
-    public List<ResearchPaper> getPapers() {
-        return papers;
-    }
+ 
+    // getters
+ 
+    public String        getStudentId()       { return studentId; }
+    public StudentDegree getDegree()          { return degree; }
+    public int           getYear()            { return year; }
+    public void          setYear(int y)       { this.year = y; }
+    public double        getGpa()             { return gpa; }
+    public List<String>  getInbox()           { return new ArrayList<>(inbox); }
+    public List<Course>  getEnrolledCourses() { return new ArrayList<>(enrolledCourses); }
+    public List<Mark>    getTranscript()      { return new ArrayList<>(transcript); }
+    
 }

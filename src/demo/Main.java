@@ -1,111 +1,71 @@
 package demo;
 
-import enums.*;
-import model.*;
-import service.*;
+import storage.DataStorage;
+import service.ReportGenerator;
+import model.Student;
+import model.Course;
 
-import java.util.Date;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("===== UNIVERSITY SYSTEM DEMO =====\n");
+        DataStorage storage = DataStorage.getInstance();
+        storage.loadData();
+        
+        Scanner scanner = new Scanner(System.in);
+        ReportGenerator reportGenerator = new ReportGenerator();
+        boolean running = true;
 
-        Course oop = new Course("OOP", 6);
-        Course calculus = new Course("Calculus", 5);
-        Course physics = new Course("Physics", 4);
-        Course databases = new Course("Databases", 6);
+        System.out.println("==========================================");
+        System.out.println(" Welcome to the University Management System ");
+        System.out.println("==========================================");
 
-        Lesson l1 = new Lesson(LessonType.LECTURE, new Date(), "Inheritance");
-        Lesson l2 = new Lesson(LessonType.PRACTICE, new Date(), "Polymorphism Lab");
-        oop.addLesson(l1);
-        oop.addLesson(l2);
-        System.out.println("Lesson info: " + l1.getInfo());
-        System.out.println("Lesson info: " + l2.getInfo());
-        System.out.println();
+        while (running) {
+            System.out.println("\n--- Main Menu ---");
+            System.out.println("1. View Data Storage Statistics");
+            System.out.println("2. Generate Student Report Demo");
+            System.out.println("3. Generate Course Report Demo");
+            System.out.println("4. Generate Marks Statistics Demo");
+            System.out.println("5. Add Dummy Data (For testing)");
+            System.out.println("6. Save and Exit");
+            System.out.print("Choose an option: ");
 
-        Student s1 = new Student(1, "Olzhas", "olzhas@uni.kz", "pass123", 2);
-        Student s2 = new Student(2, "Aisha", "aisha@uni.kz", "pass456", 2);
-        Student s3 = new Student(3, "Timur", "timur@uni.kz", "pass789", 3);
+            String choice = scanner.nextLine();
 
-        Teacher t1 = new Teacher(10, "Prof. Kanat", "kanat@uni.kz", "tpass",
-                80000, new Date(), "CS", TeacherType.PROFESSOR);
-        Teacher t2 = new Teacher(11, "Dr. Aliya", "aliya@uni.kz", "tpass2",
-                60000, new Date(), "Math", TeacherType.LECTOR);
-
-        t1.manageCourse(oop);
-        t1.manageCourse(databases);
-        t2.manageCourse(calculus);
-        t2.manageCourse(physics);
-
-        System.out.println("=== COURSE REGISTRATION ===");
-        CourseRegistrationService regService = new CourseRegistrationService();
-
-        regService.registerCourse(s1, oop);
-        regService.registerCourse(s1, calculus);
-        regService.registerCourse(s1, physics);
-        regService.registerCourse(s1, databases);
-
-        System.out.println("Total credits for " + s1.name + ": " + regService.getTotalCredits(s1));
-
-        Course extra = new Course("AI", 3);
-        regService.registerCourse(s1, extra);
-
-        regService.registerCourse(s1, oop);
-
-        System.out.println();
-
-        regService.registerCourse(s2, oop);
-        regService.registerCourse(s2, calculus);
-        regService.registerCourse(s3, oop);
-
-        System.out.println("=== PUTTING MARKS ===");
-        MarkService markService = new MarkService();
-
-        Mark m1 = new Mark(85, 90, 78);
-        Mark m2 = new Mark(70, 65, 80);
-        Mark m3 = new Mark(92, 88, 95);
-        Mark m4 = new Mark(30, 40, 20);
-
-        markService.putMark(t1, s1, oop, m1);
-        markService.putMark(t2, s1, calculus, m2);
-        markService.putMark(t1, s2, oop, m3);
-        markService.putMark(t2, s2, calculus, m4);
-        markService.putMark(t1, s3, oop, new Mark(75, 80, 70));
-
-        markService.putMark(t1, s1, calculus, new Mark(50, 50, 50));
-        System.out.println();
-
-        System.out.println("=== GRADE CALCULATIONS ===");
-        System.out.println("Olzhas OOP: " + m1.calculateGrade() + " -> " + m1.getLetterGrade());
-        System.out.println("Olzhas Calculus: " + m2.calculateGrade() + " -> " + m2.getLetterGrade());
-        System.out.println("Aisha OOP: " + m3.calculateGrade() + " -> " + m3.getLetterGrade());
-        System.out.println("Aisha Calculus: " + m4.calculateGrade() + " -> " + m4.getLetterGrade());
-        System.out.println();
-
-        System.out.println("=== TRANSCRIPTS ===");
-        System.out.println(s1.viewTranscript());
-        System.out.println(s2.viewTranscript());
-
-        System.out.println("Can Olzhas retake? " + s1.canRetake());
-        System.out.println("Can Aisha retake? " + s2.canRetake());
-        System.out.println();
-
-        s1.rateTeacher(t1, 5);
-        s2.rateTeacher(t2, 3);
-        System.out.println();
-
-        System.out.println("=== COURSE MARK REPORT ===");
-        System.out.println(markService.generateMarkReport(oop));
-
-        ReportGenerator reportGen = new ReportGenerator();
-        System.out.println(reportGen.generateMarksStatistics(oop));
-
-        System.out.println("=== TEACHER VIEW STUDENTS ===");
-        System.out.println("Students in OOP:");
-        for (Student s : t1.viewStudents(oop)) {
-            System.out.println("  - " + s.name);
+            switch (choice) {
+                case "1":
+                    System.out.println("\n--- Storage Stats ---");
+                    System.out.println("Total Users: " + storage.getUsers().size());
+                    System.out.println("Total Courses: " + storage.getCourses().size());
+                    System.out.println("Total Research Projects: " + storage.getProjects().size());
+                    break;
+                case "2":
+                    Student demoStudent = new Student(1, "Alikhan", "ali@kbtu.kz", "pass", 3.8, 2);
+                    System.out.println("\n" + reportGenerator.generateStudentReport(demoStudent));
+                    break;
+                case "3":
+                    Course demoCourse = new Course("Object-Oriented Programming", 3);
+                    System.out.println("\n" + reportGenerator.generateCourseReport(demoCourse));
+                    break;
+                case "4":
+                    Course statsCourse = new Course("Databases", 3);
+                    System.out.println("\n" + reportGenerator.generateMarksStatistics(statsCourse));
+                    break;
+                case "5":
+                    storage.getUsers().add(new Student(2, "Test Student", "test@kbtu.kz", "pass", 3.0, 1));
+                    storage.getCourses().add(new Course("Software Engineering", 3));
+                    System.out.println("\nDummy data added. Try option 1 to see changes.");
+                    break;
+                case "6":
+                    System.out.println("\nSaving data...");
+                    storage.saveData();
+                    System.out.println("Exiting system. Goodbye!");
+                    running = false;
+                    break;
+                default:
+                    System.out.println("\nInvalid option. Please try again.");
+            }
         }
-
-        System.out.println("\n===== DEMO COMPLETE =====");
+        scanner.close();
     }
 }

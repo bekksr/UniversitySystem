@@ -1,7 +1,15 @@
 package exception;
 
 public class NotResearcherException extends Exception {
-	  public NotResearcherException(String message) {
-	        super(message);
-	 }
+    private String message;
+
+    public NotResearcherException(String message) {
+        super(message);
+        this.message = message;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
 }

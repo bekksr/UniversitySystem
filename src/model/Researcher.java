@@ -4,7 +4,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public interface Researcher {
-	int getHIndex();
-
-    List<ResearchPaper> printPapers(Comparator<ResearchPaper> comparator);
+    void printPapers(Comparator<ResearchPaper> c);
+    int getHIndex();
 }

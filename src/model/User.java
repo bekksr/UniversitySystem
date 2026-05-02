@@ -10,7 +10,7 @@ public abstract class User {
     private String email;
     private String passwordHash;
     private boolean authenticated;
-    
+
  
     protected User(String firstName, String lastName, String email, String password) {
         this.id           = UUID.randomUUID().toString();
@@ -21,7 +21,7 @@ public abstract class User {
         this.authenticated = false;
     }
  
-    // ---- Auth ----
+    // auth
  
     public boolean login(String email, String password) {
         if (this.email.equals(email) && this.passwordHash.equals(hash(password))) {
@@ -42,7 +42,7 @@ public abstract class User {
  
     private String hash(String pw) { return String.valueOf(Objects.hash(pw)); }
  
-    // ---- Getters / Setters ----
+    // getters setters
  
     public String getId()        { return id; }
     public String getFirstName() { return firstName; }

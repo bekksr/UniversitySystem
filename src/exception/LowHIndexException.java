@@ -1,5 +1,7 @@
 package exception;
 
-public class LowHIndexException {
-
+public class LowHIndexException extends Exception {
+	 public LowHIndexException(String message) {
+	        super(message);
+	 }
 }

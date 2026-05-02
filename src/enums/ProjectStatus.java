@@ -1,5 +1,8 @@
 package enums;
 
-public class ProjectStatus {
-
+public enum ProjectStatus {
+	 PLANNED,
+	 ACTIVE,
+	 FINISHED,
+	 SUSPENDED
 }
